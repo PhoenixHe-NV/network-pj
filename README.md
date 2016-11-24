@@ -11,7 +11,7 @@ In this lab, you should implement a simple tool that can download content from t
 
 Each phrase has basic and extra parts. You **MUST** implement all the basic parts. For the extra parts, you can try some of them. You will get full credit for the lab if you achieve hightest points in the class. You will get 60% of the credit for the lab if you implement all the basic parts correctly.
 
-Please fetch the project from
+Please fetch the document from
 
 ```
 ftp://10.132.141.33/classes/14/161 计算机网络/PROJECT
