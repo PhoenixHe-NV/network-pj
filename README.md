@@ -11,7 +11,19 @@ In this lab, you should implement a simple tool that can download content from t
 
 Each phrase has basic and extra parts. You **MUST** implement all the basic parts. For the extra parts, you can try some of them. You will get full credit for the lab if you achieve hightest points in the class. You will get 60% of the credit for the lab if you implement all the basic parts correctly.
 
-You can use any language in this lab on __Windows__ or __OSX__ or __Linux__, but you **should not use any library** for __DNS__ or __HTTP__ if not specifically indicated. You should implement them with your code only.
+Please fetch the project from
+
+```
+ftp://10.132.141.33/classes/14/161 计算机网络/PROJECT
+```
+
+or
+
+```
+https://github.com/htc550605125/network-pj
+```
+
+You can use **any program language** in this lab on __Windows__ or __OSX__ or __Linux__, but you **should not use any library** for __DNS__ or __HTTP__ if not specifically indicated. You should implement them with your code only.
 
 **You should provide all of your souce code and a document describing how to build and run your program. Please also provide the platform you are using, and what you have implemented, in the document.**
 

@@ -1,4 +1,3 @@
-# https://github.com/htc550605125/network-pj
 import socket
 import unittest
 import subprocess
