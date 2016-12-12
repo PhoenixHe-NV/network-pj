@@ -50,9 +50,7 @@ opener = urllib.request.build_opener()
 opener.addheaders = []
 
 
-def py_get(url, query):
-    if query:
-        url = url + '?' + urllib.parse.urlencode(query)
+def py_get(url):
     try:
         req = urllib.request.Request(url)
         rsp = opener.open(req, timeout=5)
@@ -67,14 +65,14 @@ def py_get(url, query):
         return e.read(), e.code
 
 
-def test_fetch_content(self, url, simple_check=False, query=""):
+def test_fetch_content(self, url, simple_check=False):
     std = dict()
     test = dict()
 
     def func():
-        std["data"], std["code"] = py_get(url, query=query)
+        std["data"], std["code"] = py_get(url)
 
-    test["data"], test["stderr"], test["exit_code"] = test_get(test_cmd, url, func, query=query)
+    test["data"], test["stderr"], test["exit_code"] = test_get(test_cmd, url, func)
     self.assertEqual(test["exit_code"], 0, "Exit code of your program is not 0")
     if simple_check:
         self.assertEqual(len(std["data"]), len(test["data"]),
