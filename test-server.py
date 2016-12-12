@@ -3,9 +3,14 @@ import socketserver
 import string
 import time
 import http.server
-from http.server import HTTPStatus
 from threading import Thread
 
+try:
+    from http.server import HTTPStatus
+except ImportError:
+    class HTTPStatus:
+        OK = 200
+        NOT_FOUND = 404
 
 class TestTCPServer(socketserver.ThreadingTCPServer):
     def __init__(self, server_port, request_handler_class):
