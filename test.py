@@ -1,11 +1,13 @@
+import gzip
 import socket
 import unittest
 import subprocess
 import tempfile
 import sys
+import io
 import urllib.request
 
-test_cmd = "curl --verbose --silent -m 5 --compress --max-redirs 0"
+test_cmd = "curl --verbose --silent -m 5 --compress --max-redirs 0 -H 'Accept-Encoding: gzip'"
 # test_cmd = "java -jar labget.jar"
 test_cmd = test_cmd.split(" ")
 
@@ -17,9 +19,11 @@ support_https = True
 support_ipv6 = support_ipv6 and socket.has_ipv6
 
 
-def test_get(command, url, extra_func=None, timeout=16):
+def test_get(command, url, extra_func=None, timeout=16, query=""):
     stdout_file = tempfile.TemporaryFile()
     stderr_file = tempfile.TemporaryFile()
+    if query:
+        url = url + '?' + query
 
     try:
         child = subprocess.Popen(command + [url], stdout=stdout_file, stderr=stderr_file)
@@ -46,23 +50,31 @@ opener = urllib.request.build_opener()
 opener.addheaders = []
 
 
-def py_get(url):
+def py_get(url, query):
+    if query:
+        url = url + '?' + urllib.parse.urlencode(query)
     try:
         req = urllib.request.Request(url)
         rsp = opener.open(req, timeout=5)
-        return rsp.read(), rsp.getcode()
+        data, code = rsp.read(), rsp.getcode()
+        if rsp.info().get('Content-Encoding') == 'gzip':
+            buf = io.BytesIO(data)
+            f = gzip.GzipFile(fileobj=buf)
+            data = f.read()
+        return data, code
+
     except urllib.request.HTTPError as e:
         return e.read(), e.code
 
 
-def test_fetch_content(self, url, simple_check=False):
+def test_fetch_content(self, url, simple_check=False, query=""):
     std = dict()
     test = dict()
 
     def func():
-        std["data"], std["code"] = py_get(url)
+        std["data"], std["code"] = py_get(url, query=query)
 
-    test["data"], test["stderr"], test["exit_code"] = test_get(test_cmd, url, func)
+    test["data"], test["stderr"], test["exit_code"] = test_get(test_cmd, url, func, query=query)
     self.assertEqual(test["exit_code"], 0, "Exit code of your program is not 0")
     if simple_check:
         self.assertEqual(len(std["data"]), len(test["data"]),
@@ -125,18 +137,32 @@ class TestStringMethods(unittest.TestCase):
         test_fetch_content(self, "http://www.urp.fudan.edu.cn:92/eams/login.action",
                            simple_check=True)
 
-    def test_url_parsing(self):
-        test_fetch_content(self, "https://pj-test-v4.htcnet.moe/"
-                                 "test_url_parsing?data=}don't forget url encode{")
+    @unittest.skip("Invalid test")
+    def test_url_parsing_sp(self):
+        test_fetch_content(self, "http://pj-test.htcnet.moe:8033/test_url_parsing",
+                           query="?data1=}don'tforgeturlencode{&data2=345%")
 
-    @unittest.skip("Incomplete")
     def test_broken_response(self):
         def test_exit_0(url):
             stdout, _, exit_code = test_get(test_cmd, url)
             self.assertEqual(exit_code, 0, "Exit code of your program is not 0")
             self.assertEqual(len(stdout), 0, "stdout should be empty if the response is broken")
 
-        # test_exit_0("http://pj-test.htcnet.moe:8031")
+        test_exit_0("http://pj-test.htcnet.moe:8031/test/0")
+        test_exit_0("http://pj-test.htcnet.moe:8031/test/1")
+        test_exit_0("http://pj-test.htcnet.moe:8031/test/2")
+        test_exit_0("http://pj-test.htcnet.moe:8031/test/3")
+        test_exit_0("http://pj-test.htcnet.moe:8031/test/4")
+        test_exit_0("http://pj-test.htcnet.moe:8031/test/5")
+        test_exit_0("http://pj-test.htcnet.moe:8031/test/6")
+        test_exit_0("http://pj-test.htcnet.moe:8031/test/7")
+        # Chunked transfer encoding
+        test_exit_0("http://pj-test.htcnet.moe:8031/test/8")
+
+    def test_delayed_response(self):
+        test_fetch_content(self, "http://pj-test.htcnet.moe:8032/test/10")
+        test_fetch_content(self, "http://pj-test.htcnet.moe:8032/test/11")
+        test_fetch_content(self, "http://pj-test.htcnet.moe:8032/test/12")
 
     @unittest.skipIf(not support_https, "HTTPS is not supported")
     def test_simple_https(self):
@@ -171,12 +197,13 @@ class TestStringMethods(unittest.TestCase):
         test_fetch_content(self, "http://pj-test-dns-v4-v6-invalid.htcnet.moe/test")
 
     def test_chunked_coding(self):
-        pass
+        test_fetch_content(self, "http://pj-test.htcnet.moe:8033/test/20")
 
     def test_gzip_coding(self):
-        _, test = test_fetch_content(self, "http://pj-test-v4.htcnet.moe/chunked")
+        _, test = test_fetch_content(self, "http://pj-test.htcnet.moe:8033/test/21")
         self.assertTrue(test["stderr"].find(b"Content-Encoding: gzip") >= 0,
                         "Gzip coding not supported.")
+        test_fetch_content(self, "http://pj-test.htcnet.moe:8033/test/22")
 
     def test_basic_redirect(self):
         pass
